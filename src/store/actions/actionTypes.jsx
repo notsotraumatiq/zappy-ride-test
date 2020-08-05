@@ -1,0 +1,6 @@
+export const SELECT_PLAN = "SELECT_PLAN";
+export const MILE_CHECK = "MILE_CHECK";
+export const RATE_SELECT = "RATE_SELECT";
+
+export const CALCULATE_RESULT = "CALCULATE_RESULT";
+export const DISPLAY_RESULT = "DISPLAY_RESULT";
