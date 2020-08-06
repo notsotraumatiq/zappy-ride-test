@@ -1,10 +1,10 @@
 import React, { Component } from "react";
-
-import { csv } from "d3";
+import moment from "moment";
+import { csv, timeParse } from "d3";
 import data from "../../assets/SampleRate.csv";
 
 class CalculateResult extends Component {
-  state = { csvFile: null };
+  state = { rateA: null, rateB: null };
 
   //Async request area
   componentDidMount() {
@@ -12,61 +12,66 @@ class CalculateResult extends Component {
       .then((data) => {
         let intermediateResult = [];
 
-        for (let object of Object.values(data)) {
-          // console.log(object);
+        for (let [idx, eachRow] of Object.entries(data)) {
           let tempResult = {};
           let tempVal = 0;
 
-          for (let [key, value] of Object.entries(object)) {
-            // console.log(key + " " + value);
+          //ignoring headers in calculation
+          if (idx === "columns") {
+            continue;
+          }
+
+          for (let [key, value] of Object.entries(eachRow)) {
             if (key === "Date/Time") {
-              //convert into date time object
-              tempResult["Date/Time"] = new Date(object[key]);
+              // Converting it into date time object for better readability and future comparisions
+
+              tempResult["date"] = moment(
+                eachRow[key].trim(),
+                "MM/DD  hh:mm:ss"
+              );
+
+              // tempResult["time"] = parseTime(time);
             } else {
               tempVal += parseFloat(value);
             }
             tempResult["totalValue"] = tempVal;
           }
           intermediateResult.push(tempResult);
-          // console.log(intermediateResult);
-          // key are indexs, value are the objects
-          // if (key === "columns") {
-          //   continue;
-          // }
-          // for (let [k, v] of Object.entries(value)) {
-          //   if (k === "Date/Time") {
-          //     let [date, time] = v.trim().split("  ");
-          //     tempResult["time"] = time;
-          //     tempResult["date"] = date;
-          //     // console.log(date, time);
-          //   } else {
-          //     tempVal += parseFloat(v);
-          //   }
-          //   tempResult["totalValue"] = tempVal;
-          // }
-          // intermediateResult.push(tempResult);
         }
+
         // Calculation of rate A i.e B1 for Rate A
-        console.log(intermediateResult[12]);
+        // console.log(intermediateResult[2].date.hours());
         let totalTempValueRateA = 0;
         for (let { totalValue: rateA } of Object.values(intermediateResult)) {
           totalTempValueRateA += rateA;
+          // console.log(totalTempValueRateA);
         }
-        let finalRateA = totalTempValueRateA * 0.15;
+
+        const rateAMultiplier = 0.15;
+        let finalRateA = totalTempValueRateA * rateAMultiplier;
 
         // Rate B
-        const dayRate = 0.2;
-        const nightRate = 0.08;
+        const dayRateMultiplier = 0.2;
+        const nightRateMultiplier = 0.08;
 
-        for (let { time, date, totalValue } of Object.values(
-          intermediateResult
-        )) {
-          // if time
+        const peakDayTime = moment("12:00:00", "hh:mm:ss");
+        const peakEvenTime = moment("18:00:00", "hh:mm:ss");
+
+        let finalRatB = 0;
+        for (let { date, totalValue } of Object.values(intermediateResult)) {
+          if (
+            peakDayTime.hours() <= date.hours() &&
+            date.hours() <= peakEvenTime.hours()
+          ) {
+            finalRatB += totalValue * dayRateMultiplier;
+          } else {
+            finalRatB += totalValue * nightRateMultiplier;
+          }
         }
-        // console.log(finalRateA);
-      })
+        console.log(finalRatB);
 
-      // this.setState({ csvFile: result });
+        this.setState({ rateA: finalRateA, rateB: finalRatB });
+      })
 
       .catch((err) => console.log("File not found", err));
   }

@@ -1,32 +1,22 @@
+import * as actionTypes from "./actionTypes";
 import { csv } from "d3";
 
-export const loadData = (data) => {
-  csv(data)
-    .then((data) => {
-      let result = [];
+export const loadData = () => {
+  return {
+    type: actionTypes.INIT_DATA,
+  };
+};
 
-      for (let [key, value] of Object.entries(data)) {
-        let tempResult = {};
-        let tempVal = 0;
+export const selectPlan = (plan) => {
+  return {
+    type: actionTypes.SELECT_PLAN,
+    currentPlan: plan,
+  };
+};
 
-        // key are indexs, value are the objects
-        if (key === "columns") {
-          continue;
-        }
-
-        for (let [k, v] of Object.entries(value)) {
-          if (k === "Date/Time") {
-            let [date, time] = v.trim().split("  ");
-            tempResult["time"] = time;
-            tempResult["date"] = date;
-          } else {
-            tempVal += parseFloat(v);
-          }
-          tempResult["totalValue"] = tempVal;
-        }
-        result.push(tempResult);
-      }
-      this.setState({ csvFile: result });
-    })
-    .catch((err) => console.log("File not found", err));
+export const estimatedMiles = (miles) => {
+  return {
+    type: actionTypes.MILES_TO_BE_DRIVEN,
+    milesToBeDriven: miles,
+  };
 };
