@@ -3,34 +3,36 @@ import Rates from "./Components/Rates/Rates";
 import CalculateResult from "./Components/CalculateResult/CalculateResult";
 import TimeDuration from "./Components/TimeDuration/TimeDuration";
 import MilesPerYear from "./Components/MilesPerYear/MilesPerYear";
-import { css } from "@emotion/core";
-import BeatLoader from "react-spinners/BeatLoader";
 import classes from "./App.module.css";
+import { AwesomeButton } from "react-awesome-button";
+// import AwesomeButtonStyles from "react-awesome-button/src/styles/styles.scss";
+import "react-awesome-button/dist/styles.css";
+import { css } from "@emotion/core";
 
-const override = css`
-  position: fixed;
-  z-index: 999;
-  height: 2em;
-  width: 4em;
-  overflow: visible;
-  margin: auto;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-`;
 class App extends Component {
-  state = { loading: true };
+  state = { option: null };
 
   render() {
     return (
       <>
-        <div className={classes.App}>EV CHARGING APP</div>
-        {this.state.loading ? (
-          <BeatLoader css={override} color={"#36D7B7"} />
-        ) : null}
-        <Rates />
-        <CalculateResult />
+        <div className={classes.App}>
+          <h1>EV CHARGING APP</h1>
+          <h2>Whats your current Plan</h2>
+          <button
+            className={classes.Button}
+            onClick={() => this.setState({ option: 1 })}
+          >
+            Rate A: Flat Rate
+          </button>
+          <button
+            className={classes.Button}
+            onClick={() => this.setState({ option: 2 })}
+          >
+            Rate B: Time of use
+          </button>
+          <Rates />
+          <CalculateResult options={this.state.option} />
+        </div>
       </>
     );
   }

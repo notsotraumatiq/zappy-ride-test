@@ -2,6 +2,17 @@
   text-align: center;
 }
 
-/* .Spinner {
-  align-items: center !important;
-} */
+.aws-btn {
+  --button-default-height: 48px;
+  --button-default-font-size: 14px;
+  --button-default-border-radius: 6px;
+  --button-horizontal-padding: 20px;
+  --button-raise-level: 5px;
+  --button-hover-pressure: 2;
+  --transform-speed: 0.185s;
+  --button-primary-color: #36d753;
+  --button-primary-color-dark: transparent;
+  --button-primary-color-light: #d4d9e4;
+  --button-primary-color-hover: #36d750;
+  --button-primary-border: 0px solid #ffffff;
+}
