@@ -5,9 +5,8 @@ import { css } from "@emotion/core";
 import BeatLoader from "react-spinners/BeatLoader";
 import data from "../../assets/SampleRate.csv";
 import MilesPerYear from "../MilesPerYear/MilesPerYear";
-import { Slider, Typography } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import classes from "./CalculateResult.module.css";
+import TimeRangePicker from "@wojtekmaj/react-timerange-picker";
 
 const override = css`
   position: fixed;
@@ -30,20 +29,15 @@ class CalculateResult extends Component {
     totalNightRateB: null,
     loading: true,
     miles: "",
-    value: [1, 24],
+    value: ["1:00", "12:00"],
   };
 
-  valuetext = (value) => {
-    if (value < 12) {
-      return `${value}AM`;
-    } else {
-      return `${value}PM`;
-    }
-  };
   handleCalculation = () => {
     let { option } = this.props;
-    let { miles, rateAWithoutEV, rateBWithoutEV } = this.state;
-
+    let { miles, rateAWithoutEV, rateBWithoutEV, value } = this.state;
+    const userTimeStart = moment(value[0], "hh:mm");
+    const userTimeEnd = moment(value[1], "hh:mm");
+    console.log(userTimeStart.hours(), userTimeEnd);
     // Converting Miles per year to miles per hour and Calculating B2 for Rate A and B
 
     // const milesDrivenPerDay = miles / 365;
@@ -62,6 +56,15 @@ class CalculateResult extends Component {
     const nightRateMultiplier = 0.08;
 
     // 12000 * 0.3 ratio day total night total
+    const numberOfHoursToCharge = value[1] - value[0];
+    if (value[0] >= 12 && value[1] <= 18) {
+      const rateBWithEV = miles * dayRateMultiplier * milesKWHMultiplier;
+    } else {
+      if (value[0] >= 18 && value[1] <= 12) {
+        const rateBWithEV = miles * nightRateMultiplier * milesKWHMultiplier;
+      } else {
+      }
+    }
   };
 
   //Async request area
@@ -143,24 +146,6 @@ class CalculateResult extends Component {
       .catch((err) => console.log("File not found", err));
   }
   render() {
-    const marks = [
-      {
-        value: 1,
-        label: "1AM",
-      },
-      {
-        value: 12,
-        label: "12PM",
-      },
-      {
-        value: 18,
-        label: "6PM",
-      },
-      {
-        value: 24,
-        label: "12AM",
-      },
-    ];
     return (
       <div>
         {this.state.loading ? (
@@ -171,43 +156,38 @@ class CalculateResult extends Component {
           <input
             type="number"
             placeholder="Miles Driven"
-            onChange={(event) => this.setState({ miles: event.target.value })}
+            onChange={(event, object) => {
+              console.log(object);
+            }}
           />
         </label>
-        <Typography id="range-slider" gutterBottom>
-          What are the hours do you plan to charge ?
-        </Typography>
-        <Slider
-          className={classes.Slider}
-          min={1}
-          max={24}
-          step={1}
+        <h3>What are the hours do you plan to charge ?</h3>
+
+        <TimeRangePicker
+          onChange={(event) => this.setState({ value: event })}
           value={this.state.value}
-          onChange={(event, newValue) => this.setState({ value: newValue })}
-          aria-labelledby="range-slider"
-          valueLabelDisplay="on"
-          // getAriaValueText={this.valuetext}
-          marks={marks}
+          maxDetail={"hour"}
+          required={true}
+          clearIcon={null}
         />
+
         <button onClick={this.handleCalculation}>Calculate </button>
 
         <div>
           {" "}
-          <p>
-            Your Bill Impact with EV under each Rates are
-            <ul>
-              <li>
-                <p>
-                  Rate A : <strong> {} </strong>
-                </p>
-              </li>
-              <li>
-                <p>
-                  Rate B : <strong> {} </strong>
-                </p>
-              </li>
-            </ul>
-          </p>
+          <p>Your Bill Impact with EV under each Rates are</p>
+          <ul>
+            <li>
+              <p>
+                Rate A : <strong> {} </strong>
+              </p>
+            </li>
+            <li>
+              <p>
+                Rate B : <strong> {} </strong>
+              </p>
+            </li>
+          </ul>
           <p>Based on the above analysis </p>
         </div>
       </div>
