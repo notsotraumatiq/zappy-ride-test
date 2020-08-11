@@ -4,7 +4,6 @@ import { csv } from "d3";
 import { css } from "@emotion/core";
 import BeatLoader from "react-spinners/BeatLoader";
 import data from "../../assets/SampleRate.csv";
-import MilesPerYear from "../MilesPerYear/MilesPerYear";
 import classes from "./CalculateResult.module.css";
 import TimeRangePicker from "@wojtekmaj/react-timerange-picker";
 
@@ -24,23 +23,26 @@ const override = css`
 class CalculateResult extends Component {
   state = {
     rateAWithoutEV: null,
+    option: this.props.option,
     rateBWithoutEV: null,
-    totalDayRateB: null,
-    totalNightRateB: null,
+    ratAWithEV: null,
+    rateBWithEV: null,
+    billImpactA: null,
+    billImpactB: null,
     loading: true,
-    miles: "",
+    miles: 0,
     value: ["1:00", "12:00"],
   };
 
   handleCalculation = () => {
+    // this.setState({ loading: true });
     let { option } = this.props;
     let { miles, rateAWithoutEV, rateBWithoutEV, value } = this.state;
-    const userTimeStart = moment(value[0], "hh:mm");
-    const userTimeEnd = moment(value[1], "hh:mm");
-    console.log(userTimeStart.hours(), userTimeEnd);
-    // Converting Miles per year to miles per hour and Calculating B2 for Rate A and B
 
-    // const milesDrivenPerDay = miles / 365;
+    let userTimeStart = moment(value[0], "hh:mm");
+    let userTimeEnd = moment(value[1], "hh:mm");
+
+    // remember to convert 00:00 to 24 for both
 
     const milesKWHMultiplier = 0.3;
 
@@ -50,26 +52,75 @@ class CalculateResult extends Component {
       rateAWithoutEV + miles * milesKWHMultiplier * rateAMultiplier;
 
     const differenceInRateA = rateAWithEV - rateAWithoutEV;
+    console.log(differenceInRateA);
 
     // Calculating B2
     const dayRateMultiplier = 0.2;
     const nightRateMultiplier = 0.08;
 
-    // 12000 * 0.3 ratio day total night total
-    const numberOfHoursToCharge = value[1] - value[0];
-    if (value[0] >= 12 && value[1] <= 18) {
-      const rateBWithEV = miles * dayRateMultiplier * milesKWHMultiplier;
+    const numberOfHoursToCharge = Math.abs(
+      parseInt(userTimeEnd.hours()) - parseInt(userTimeStart.hours())
+    );
+
+    const timeDuration = [userTimeStart.hours(), userTimeEnd.hours()];
+
+    let rateBWithEV = 0;
+    // between 12pm - 6 pm
+    if (
+      timeDuration[0] >= 12 &&
+      timeDuration < 18 &&
+      (timeDuration[1] > 12 || timeDuration[1] <= 18)
+    ) {
+      rateBWithEV = miles * dayRateMultiplier * milesKWHMultiplier;
     } else {
-      if (value[0] >= 18 && value[1] <= 12) {
-        const rateBWithEV = miles * nightRateMultiplier * milesKWHMultiplier;
+      // between 6pm - 12pm
+      if (
+        (timeDuration[0] <= 12 || timeDuration[0] >= 18) &&
+        (timeDuration[1] >= 18 || timeDuration[1] <= 12)
+      ) {
+        console.log("ASf");
+        rateBWithEV = miles * nightRateMultiplier * milesKWHMultiplier;
       } else {
+        // Either the start or the end overlaps so we take the ratio
+
+        let peakHours = [12, 13, 14, 15, 16, 17];
+        let startH = 0;
+        let start = userTimeStart.hours();
+        let end = userTimeEnd.hours();
+
+        let startCounter = start;
+        for (let i = 0; i < peakHours.length; i++) {
+          if (start <= peakHours[i]) {
+            startH += 1;
+          }
+        }
+        let endR = Math.abs(numberOfHoursToCharge - startH);
+
+        const dayRatio = startH / numberOfHoursToCharge;
+        const nightRatio = endR / numberOfHoursToCharge;
+        console.log(dayRatio);
+
+        const rateBWithEV =
+          rateBWithoutEV +
+          miles * dayRatio * milesKWHMultiplier * dayRateMultiplier +
+          miles * nightRatio * milesKWHMultiplier * nightRateMultiplier;
+        const differenceInRateB = rateBWithEV - rateBWithoutEV;
+
+        console.log(differenceInRateB);
+
+        this.setState({
+          loading: false,
+          ratAWithEV: rateAWithEV,
+          rateBWithEV: rateBWithEV,
+          billImpactA: differenceInRateA,
+          billImpactB: differenceInRateB,
+        });
       }
     }
   };
 
   //Async request area
   componentDidMount() {
-    console.log("eesdfhd");
     csv(data)
       .then((data) => {
         let intermediateResult = [];
@@ -152,13 +203,14 @@ class CalculateResult extends Component {
           <BeatLoader css={override} color={"#36D7B7"} />
         ) : null}
         <label htmlFor="milesDrive">
-          Miles Driven
+          Miles Driven:
           <input
             type="number"
             placeholder="Miles Driven"
-            onChange={(event, object) => {
-              console.log(object);
+            onChange={(event) => {
+              this.setState({ miles: parseInt(event.target.value) });
             }}
+            value={this.state.miles}
           />
         </label>
         <h3>What are the hours do you plan to charge ?</h3>
@@ -171,7 +223,9 @@ class CalculateResult extends Component {
           clearIcon={null}
         />
 
-        <button onClick={this.handleCalculation}>Calculate </button>
+        <button onClick={this.handleCalculation} className={classes.Button}>
+          Calculate{" "}
+        </button>
 
         <div>
           {" "}

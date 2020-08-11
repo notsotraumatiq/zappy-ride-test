@@ -1,8 +1,33 @@
-.Slider {
-  width: 50% !important;
+.App {
+  text-align: center;
 }
 
-.react-timerange-picker {
-  height: 100px;
-  width: auto;
+.Button {
+  display: inline-block;
+  padding: 0.5em 3em;
+  border: 0.16em solid #ffffff;
+  margin: 1em 0.3em 0.3em 1em;
+  box-sizing: border-box;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #000000;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.Button:hover {
+  color: #7a7a7a;
+  border-color: #7a7a7a;
+}
+.Button:active {
+  color: #36d7b7;
+  border-color: #36d7b7;
+  text-decoration-color: #36d7b7;
+}
+@media all and (max-width: 30em) {
+   .Button {
+    display: block;
+    margin: 0.4em auto;
+  }
 }

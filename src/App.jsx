@@ -1,12 +1,6 @@
 import React, { Component } from "react";
-import Rates from "./Components/Rates/Rates";
 import CalculateResult from "./Components/CalculateResult/CalculateResult";
-import TimeDuration from "./Components/TimeDuration/TimeDuration";
-import MilesPerYear from "./Components/MilesPerYear/MilesPerYear";
 import classes from "./App.module.css";
-import { AwesomeButton } from "react-awesome-button";
-// import AwesomeButtonStyles from "react-awesome-button/src/styles/styles.scss";
-import "react-awesome-button/dist/styles.css";
 import { css } from "@emotion/core";
 
 class App extends Component {
@@ -30,7 +24,7 @@ class App extends Component {
           >
             Rate B: Time of use
           </button>
-          <Rates />
+
           <CalculateResult options={this.state.option} />
         </div>
       </>
