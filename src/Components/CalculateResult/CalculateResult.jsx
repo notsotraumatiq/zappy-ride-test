@@ -23,7 +23,6 @@ const override = css`
 class CalculateResult extends Component {
   state = {
     rateAWithoutEV: null,
-    option: this.props.option,
     rateBWithoutEV: null,
     ratAWithEV: null,
     rateBWithEV: null,
@@ -35,10 +34,8 @@ class CalculateResult extends Component {
   };
 
   handleCalculation = () => {
-    // this.setState({ loading: true });
-    let { option } = this.props;
     let { miles, rateAWithoutEV, rateBWithoutEV, value } = this.state;
-
+    miles = parseInt(miles);
     let userTimeStart = moment(value[0], "hh:mm");
     let userTimeEnd = moment(value[1], "hh:mm");
 
@@ -50,9 +47,8 @@ class CalculateResult extends Component {
 
     const rateAWithEV =
       rateAWithoutEV + miles * milesKWHMultiplier * rateAMultiplier;
-
+    console.log(rateAWithEV);
     const differenceInRateA = rateAWithEV - rateAWithoutEV;
-    console.log(differenceInRateA);
 
     // Calculating B2
     const dayRateMultiplier = 0.2;
@@ -66,57 +62,59 @@ class CalculateResult extends Component {
 
     let rateBWithEV = 0;
     // between 12pm - 6 pm
+
     if (
       timeDuration[0] >= 12 &&
       timeDuration < 18 &&
-      (timeDuration[1] > 12 || timeDuration[1] <= 18)
+      (timeDuration[1] > 12 || timeDuration[1] <= 18) &&
+      timeDuration[0] < timeDuration[1]
     ) {
-      rateBWithEV = miles * dayRateMultiplier * milesKWHMultiplier;
-    } else {
+      //  12  13
+      // 1pm  1 pm
+      console.log("12 - 6");
+      rateBWithEV =
+        rateBWithoutEV + miles * dayRateMultiplier * milesKWHMultiplier;
+    } else if (
+      (timeDuration[0] <= 12 || timeDuration[0] >= 18) &&
+      (timeDuration[1] >= 18 || timeDuration[1] <= 12)
+    ) {
       // between 6pm - 12pm
-      if (
-        (timeDuration[0] <= 12 || timeDuration[0] >= 18) &&
-        (timeDuration[1] >= 18 || timeDuration[1] <= 12)
-      ) {
-        console.log("ASf");
-        rateBWithEV = miles * nightRateMultiplier * milesKWHMultiplier;
-      } else {
-        // Either the start or the end overlaps so we take the ratio
 
-        let peakHours = [12, 13, 14, 15, 16, 17];
-        let startH = 0;
-        let start = userTimeStart.hours();
-        let end = userTimeEnd.hours();
+      rateBWithEV =
+        rateBWithoutEV + miles * nightRateMultiplier * milesKWHMultiplier;
+      console.log("6- 24");
+    } else {
+      // Either the start or the end overlaps so we take the ratio
 
-        let startCounter = start;
-        for (let i = 0; i < peakHours.length; i++) {
-          if (start <= peakHours[i]) {
-            startH += 1;
-          }
+      let peakHours = [12, 13, 14, 15, 16, 17];
+      let startH = 0;
+      let start = userTimeStart.hours();
+      let end = userTimeEnd.hours();
+
+      let startCounter = start;
+      for (let i = 0; i < peakHours.length; i++) {
+        if (start <= peakHours[i]) {
+          startH += 1;
         }
-        let endR = Math.abs(numberOfHoursToCharge - startH);
-
-        const dayRatio = startH / numberOfHoursToCharge;
-        const nightRatio = endR / numberOfHoursToCharge;
-        console.log(dayRatio);
-
-        const rateBWithEV =
-          rateBWithoutEV +
-          miles * dayRatio * milesKWHMultiplier * dayRateMultiplier +
-          miles * nightRatio * milesKWHMultiplier * nightRateMultiplier;
-        const differenceInRateB = rateBWithEV - rateBWithoutEV;
-
-        console.log(differenceInRateB);
-
-        this.setState({
-          loading: false,
-          ratAWithEV: rateAWithEV,
-          rateBWithEV: rateBWithEV,
-          billImpactA: differenceInRateA,
-          billImpactB: differenceInRateB,
-        });
       }
+
+      let endR = Math.abs(numberOfHoursToCharge - startH);
+
+      const dayRatio = startH / numberOfHoursToCharge;
+      const nightRatio = endR / numberOfHoursToCharge;
+
+      rateBWithEV =
+        rateBWithoutEV +
+        miles * dayRatio * milesKWHMultiplier * dayRateMultiplier +
+        miles * nightRatio * milesKWHMultiplier * nightRateMultiplier;
     }
+    const differenceInRateB = rateBWithEV - rateBWithoutEV;
+    this.setState({
+      ratAWithEV: rateAWithEV,
+      rateBWithEV: rateBWithEV,
+      billImpactA: differenceInRateA,
+      billImpactB: differenceInRateB,
+    });
   };
 
   //Async request area
@@ -197,18 +195,38 @@ class CalculateResult extends Component {
       .catch((err) => console.log("File not found", err));
   }
   render() {
+    let displayResult = null;
+    const A = this.state.billImpactA;
+    const B = this.state.billImpactB;
+    if (A && B) {
+      if (
+        (A > B && this.props.options === 2) ||
+        (A < B && this.props.options === 1)
+      ) {
+        displayResult = <p>You are on the cheapest Rate</p>;
+      } else if (A > B && this.props.options === 1) {
+        displayResult = (
+          <p>You shall get better rates if you switch to Rate B</p>
+        );
+      } else {
+        displayResult = (
+          <p>You shall get better rates if you switch to Rate A</p>
+        );
+      }
+    }
     return (
       <div>
         {this.state.loading ? (
           <BeatLoader css={override} color={"#36D7B7"} />
         ) : null}
-        <label htmlFor="milesDrive">
+        <label className={classes.Label} htmlFor="milesDrive">
           Miles Driven:
           <input
+            className={classes.Input}
             type="number"
             placeholder="Miles Driven"
             onChange={(event) => {
-              this.setState({ miles: parseInt(event.target.value) });
+              this.setState({ miles: event.target.value });
             }}
             value={this.state.miles}
           />
@@ -223,27 +241,46 @@ class CalculateResult extends Component {
           clearIcon={null}
         />
 
-        <button onClick={this.handleCalculation} className={classes.Button}>
+        <button
+          onClick={this.handleCalculation}
+          className={classes.Button}
+          disabled={this.props.options === null ? true : false}
+        >
           Calculate{" "}
         </button>
 
-        <div>
-          {" "}
-          <p>Your Bill Impact with EV under each Rates are</p>
-          <ul>
-            <li>
-              <p>
-                Rate A : <strong> {} </strong>
-              </p>
-            </li>
-            <li>
-              <p>
-                Rate B : <strong> {} </strong>
-              </p>
-            </li>
-          </ul>
-          <p>Based on the above analysis </p>
-        </div>
+        {displayResult && (
+          <div>
+            {" "}
+            <p>Your Bill Impact with EV under each Rates are</p>
+            <ul>
+              <li>
+                <p>
+                  Rate A :{" "}
+                  <strong> {this.state.ratAWithEV.toFixed(2)} USD </strong>
+                </p>
+                <p>
+                  Bill impact for rate A{" "}
+                  <strong> {this.state.billImpactA.toFixed(2)} USD </strong>
+                </p>
+              </li>
+              <li>
+                <p>
+                  Rate B :{" "}
+                  <strong> {this.state.rateBWithEV.toFixed(2)} USD </strong>
+                </p>
+                <p>
+                  Bill impact for rate A{" "}
+                  <strong> {this.state.billImpactB.toFixed(2)} USD </strong>
+                </p>
+              </li>
+            </ul>
+            <div>
+              <p>Based on the above analysis </p>
+              {displayResult}
+            </div>
+          </div>
+        )}
       </div>
     );
   }

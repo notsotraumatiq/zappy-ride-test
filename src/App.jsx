@@ -13,13 +13,21 @@ class App extends Component {
           <h1>EV CHARGING APP</h1>
           <h2>Whats your current Plan</h2>
           <button
-            className={classes.Button}
+            className={
+              this.state.option === 1
+                ? classes.Button + " " + classes.Active
+                : classes.Button
+            }
             onClick={() => this.setState({ option: 1 })}
           >
             Rate A: Flat Rate
           </button>
           <button
-            className={classes.Button}
+            className={
+              this.state.option === 2
+                ? classes.Button + " " + classes.Active
+                : classes.Button
+            }
             onClick={() => this.setState({ option: 2 })}
           >
             Rate B: Time of use
@@ -31,5 +39,4 @@ class App extends Component {
     );
   }
 }
-
 export default App;

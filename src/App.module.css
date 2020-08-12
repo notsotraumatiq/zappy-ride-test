@@ -1,6 +1,10 @@
 .App {
   text-align: center;
 }
+h1 {
+  margin-top: 5%;
+  margin-bottom: 10px;
+}
 
 .Button {
   display: inline-block;
@@ -9,18 +13,25 @@
   margin: 1em 0.3em 0.3em 1em;
   box-sizing: border-box;
   text-decoration: none;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-weight: 400;
   color: #000000;
   text-align: center;
   transition: all 0.15s;
+  outline: none;
 }
 
 .Button:hover {
   color: #7a7a7a;
   border-color: #7a7a7a;
 }
-.Button:active {
+.Button:focus {
+  color: #36d7b7;
+  border-color: #36d7b7;
+  text-decoration-color: #36d7b7;
+}
+
+.Active {
   color: #36d7b7;
   border-color: #36d7b7;
   text-decoration-color: #36d7b7;
