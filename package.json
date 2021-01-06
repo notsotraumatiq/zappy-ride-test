@@ -9,7 +9,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "@wojtekmaj/react-timerange-picker": "^3.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "d3": "^5.16.0",
     "emotion": "^10.0.27",
     "moment": "^2.27.0",
